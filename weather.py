@@ -43,7 +43,7 @@ weather_params = {
     "latitude": latitude,
     "longitude": longitude,
     "hourly": "temperature_2m,precipitation_probability,relative_humidity_2m,wind_speed_10m,weather_code",
-    "daily": "temperature_2m_max,temperature_2m_min",
+    "daily": "temperature_2m_max,temperature_2m_min,weather_code",
     "forecast_days": 3,
     "timezone": "Asia/Seoul"
 }
@@ -51,9 +51,11 @@ weather_params = {
 weather_response = requests.get(weather_url, params=weather_params)
 
 weather_data = weather_response.json()
+
 daily_times = weather_data["daily"]["time"]
 max_temperatures = weather_data["daily"]["temperature_2m_max"]
 min_temperatures = weather_data["daily"]["temperature_2m_min"]
+daily_weather_codes = weather_data["daily"]["weather_code"]
 
 times = weather_data["hourly"]["time"]
 temperatures = weather_data["hourly"]["temperature_2m"]
@@ -114,11 +116,16 @@ for i in range(len(times)):
 
         weather = weather_names.get(weather_code[i], "알 수 없음")
 
+        daily_weather = weather_names.get(
+            daily_weather_codes[daily_index], "알 수 없음"
+        )
+
         if day != last_day:
             print()
             print("====================")
             print("       ", day)
             print("====================")
+            print("대표 날씨:", daily_weather)
             print("최저기온:", min_temp, "℃")
             print("최고기온:", max_temp, "℃")
             last_day = day
