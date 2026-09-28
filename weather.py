@@ -10,23 +10,35 @@ if city == "":
 
 print("입력한 지역:", city)
 
-geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+if city == "서울":
+    latitude = 37.5665
+    longitude = 126.9780
+else:
+    geo_url = "https://geocoding-api.open-meteo.com/v1/search"
 
-geo_params = {
-    "name": city,
-    "count": 1,
-    "language": "ko",
-    "format": "json"
-}
 
-geo_response = requests.get(geo_url, params=geo_params)
+    geo_params = {
+        "name": city,
+        "count": 1,
+        "format": "json",
+        "language": "ko"
+    }
 
-print(geo_response.status_code)
+    geo_response = requests.get(geo_url, params=geo_params)
 
-geo_data = geo_response.json()
+    if geo_response.status_code != 200:
+        print("지역 검색 API 오류가 발생했습니다.")
+        exit()
 
-latitude = geo_data["results"][0]["latitude"]
-longitude = geo_data["results"][0]["longitude"]
+    geo_data = geo_response.json()
+
+    if "results" not in geo_data or len(geo_data["results"]) == 0:
+        print("입력한 지역을 찾을 수 없습니다.")
+        print("지역 이름을 다시 확인해주세요.")
+        exit()
+
+    latitude = geo_data["results"][0]["latitude"]
+    longitude = geo_data["results"][0]["longitude"]
 
 print("위도:", latitude)
 print("경도:", longitude)
@@ -37,19 +49,23 @@ weather_params = {
     "latitude": latitude,
     "longitude": longitude,
     "hourly": "temperature_2m,precipitation_probability,relative_humidity_2m,wind_speed_10m,weather_code",
-    "daily": "temperature_2m_max,temperature_2m_min",
+    "daily": "temperature_2m_max,temperature_2m_min,weather_code",
     "forecast_days": 3,
     "timezone": "Asia/Seoul"
 }
 
 weather_response = requests.get(weather_url, params=weather_params)
 
-print(weather_response.status_code)
+if weather_response.status_code != 200:
+    print("날씨 API 오류가 발생했습니다.")
+    exit()
 
 weather_data = weather_response.json()
+
 daily_times = weather_data["daily"]["time"]
 max_temperatures = weather_data["daily"]["temperature_2m_max"]
 min_temperatures = weather_data["daily"]["temperature_2m_min"]
+daily_weather_codes = weather_data["daily"]["weather_code"]
 
 times = weather_data["hourly"]["time"]
 temperatures = weather_data["hourly"]["temperature_2m"]
@@ -61,25 +77,27 @@ weather_code = weather_data["hourly"]["weather_code"]
 today = datetime.now().date()
 
 weather_names = {
-    0: "맑음",
-    1: "대체로 맑음",
-    2: "부분적으로 흐림",
-    3: "흐림",
-    45: "안개",
-    48: "짙은 안개",
-    51: "약한 이슬비",
-    53: "이슬비",
-    55: "강한 이슬비",
-    61: "약한 비",
-    63: "비",
-    65: "강한 비",
-    71: "약한 눈",
-    73: "눈",
-    75: "강한 눈",
-    80: "약한 소나기",
-    81: "소나기",
-    82: "강한 소나기",
-    95: "뇌우"
+    0: "☀️ 맑음",
+    1: "🌤️ 대체로 맑음",
+    2: "⛅ 부분적으로 흐림",
+    3: "☁️ 흐림",
+    45: "🌫️ 안개",
+    48: "🌫️ 짙은 안개",
+    51: "🌦️ 약한 이슬비",
+    53: "🌦️ 이슬비",
+    55: "🌧️ 강한 이슬비",
+    61: "🌧️ 약한 비",
+    63: "🌧️ 비",
+    65: "🌧️ 강한 비",
+    71: "🌨️ 약한 눈",
+    73: "❄️ 눈",
+    75: "❄️ 강한 눈",
+    80: "🌦️ 약한 소나기",
+    81: "🌧️ 소나기",
+    82: "🌧️ 강한 소나기",
+    95: "⛈️ 뇌우",
+    96: "⛈️ 우박을 동반한 뇌우",
+    99: "⛈️ 강한 우박을 동반한 뇌우"
 }
 
 last_day = ""
@@ -108,16 +126,28 @@ for i in range(len(times)):
 
         weather = weather_names.get(weather_code[i], "알 수 없음")
 
+        daily_weather = weather_names.get(
+            daily_weather_codes[daily_index], "알 수 없음"
+        )
+
         if day != last_day:
             print()
-            print("====", day, "====")
+            print("====================")
+            print("       ", day)
+            print("====================")
+            print("대표 날씨:", daily_weather)
             print("최저기온:", min_temp, "℃")
             print("최고기온:", max_temp, "℃")
             last_day = day
 
-        print(time)
+        print()
+        print("[", time, "]")
         print("날씨:", weather)
         print("기온:", temperatures[i], "℃")
         print("강수확률:", precipitation[i], "%")
+
+        if precipitation[i] >= 60:
+            print("⚠ 비가 올 가능성이 높습니다.")
+
         print("습도:", humidity[i], "%")
         print("풍속:", wind_speed[i], "km/h")
