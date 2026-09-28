@@ -135,5 +135,9 @@ for i in range(len(times)):
         print("날씨:", weather)
         print("기온:", temperatures[i], "℃")
         print("강수확률:", precipitation[i], "%")
+
+        if precipitation[i] >= 60:
+            print("⚠ 비가 올 가능성이 높습니다.")
+
         print("습도:", humidity[i], "%")
         print("풍속:", wind_speed[i], "km/h")
