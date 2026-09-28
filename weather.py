@@ -10,23 +10,29 @@ if city == "":
 
 print("입력한 지역:", city)
 
-geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+if city == "서울":
+    latitude = 37.5665
+    longitude = 126.9780
+else:
+    geo_url = "https://geocoding-api.open-meteo.com/v1/search"
 
-geo_params = {
-    "name": city,
-    "count": 1,
-    "language": "ko",
-    "format": "json"
-}
 
-geo_response = requests.get(geo_url, params=geo_params)
+    geo_params = {
+        "name": city,
+        "count": 1,
+        "format": "json",
+        "language": "ko"
+    }
 
-print(geo_response.status_code)
+    geo_response = requests.get(geo_url, params=geo_params)
+    geo_data = geo_response.json()
 
-geo_data = geo_response.json()
+    if "results" not in geo_data or len(geo_data["results"]) == 0:
+        print("지역을 찾을 수 없습니다.")
+        exit()
 
-latitude = geo_data["results"][0]["latitude"]
-longitude = geo_data["results"][0]["longitude"]
+    latitude = geo_data["results"][0]["latitude"]
+    longitude = geo_data["results"][0]["longitude"]
 
 print("위도:", latitude)
 print("경도:", longitude)
@@ -44,8 +50,6 @@ weather_params = {
 
 weather_response = requests.get(weather_url, params=weather_params)
 
-print(weather_response.status_code)
-
 weather_data = weather_response.json()
 daily_times = weather_data["daily"]["time"]
 max_temperatures = weather_data["daily"]["temperature_2m_max"]
@@ -61,25 +65,27 @@ weather_code = weather_data["hourly"]["weather_code"]
 today = datetime.now().date()
 
 weather_names = {
-    0: "맑음",
-    1: "대체로 맑음",
-    2: "부분적으로 흐림",
-    3: "흐림",
-    45: "안개",
-    48: "짙은 안개",
-    51: "약한 이슬비",
-    53: "이슬비",
-    55: "강한 이슬비",
-    61: "약한 비",
-    63: "비",
-    65: "강한 비",
-    71: "약한 눈",
-    73: "눈",
-    75: "강한 눈",
-    80: "약한 소나기",
-    81: "소나기",
-    82: "강한 소나기",
-    95: "뇌우"
+    0: "☀️ 맑음",
+    1: "🌤️ 대체로 맑음",
+    2: "⛅ 부분적으로 흐림",
+    3: "☁️ 흐림",
+    45: "🌫️ 안개",
+    48: "🌫️ 짙은 안개",
+    51: "🌦️ 약한 이슬비",
+    53: "🌦️ 이슬비",
+    55: "🌧️ 강한 이슬비",
+    61: "🌧️ 약한 비",
+    63: "🌧️ 비",
+    65: "🌧️ 강한 비",
+    71: "🌨️ 약한 눈",
+    73: "❄️ 눈",
+    75: "❄️ 강한 눈",
+    80: "🌦️ 약한 소나기",
+    81: "🌧️ 소나기",
+    82: "🌧️ 강한 소나기",
+    95: "⛈️ 뇌우",
+    96: "⛈️ 우박을 동반한 뇌우",
+    99: "⛈️ 강한 우박을 동반한 뇌우"
 }
 
 last_day = ""
@@ -110,12 +116,15 @@ for i in range(len(times)):
 
         if day != last_day:
             print()
-            print("====", day, "====")
+            print("====================")
+            print("       ", day)
+            print("====================")
             print("최저기온:", min_temp, "℃")
             print("최고기온:", max_temp, "℃")
             last_day = day
 
-        print(time)
+        print()
+        print("[", time, "]")
         print("날씨:", weather)
         print("기온:", temperatures[i], "℃")
         print("강수확률:", precipitation[i], "%")
