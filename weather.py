@@ -25,10 +25,16 @@ else:
     }
 
     geo_response = requests.get(geo_url, params=geo_params)
+
+    if geo_response.status_code != 200:
+        print("지역 검색 API 오류가 발생했습니다.")
+        exit()
+
     geo_data = geo_response.json()
 
     if "results" not in geo_data or len(geo_data["results"]) == 0:
-        print("지역을 찾을 수 없습니다.")
+        print("입력한 지역을 찾을 수 없습니다.")
+        print("지역 이름을 다시 확인해주세요.")
         exit()
 
     latitude = geo_data["results"][0]["latitude"]
@@ -49,6 +55,10 @@ weather_params = {
 }
 
 weather_response = requests.get(weather_url, params=weather_params)
+
+if weather_response.status_code != 200:
+    print("날씨 API 오류가 발생했습니다.")
+    exit()
 
 weather_data = weather_response.json()
 
